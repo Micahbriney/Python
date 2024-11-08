@@ -1,0 +1,183 @@
+(a)  Source of the data (URL, name of the person or organization who produced the data)
+(b)  A brief description of the tables you defined and the relationships between them.
+(c)  Any mapping challenges you may have encountered.
+(d)  Three non-trivial information requests  /  queries  that  can  be  answered  using  thedataset you chose
+
+
+a.
+ACHAEL TATMAN · UPDATED 5 YEARS AGO
+https://www.kaggle.com/datasets/rtatman/lego-database?select=inventory_sets.csv
+LEGO Database
+The LEGO Parts/Sets/Colors and Inventories of every official LEGO set
+
+b.
+table: part_categories
+Contains information on the part category (what type of part it is)
+and a unique ID for that part category
+
+
+table: themes
+Includes information on lego themes. Each theme is given 
+a unique ID number, a name, and 
+(if it's part of a bigger theme) which theme it's part of.
+
+
+table: colors
+Contains information on LEGO colors, including a unique ID 
+for each color, its name, and approximate RGB value, and 
+whether it's transparent
+
+table: parts
+Includes information on lego parts, including a unique ID 
+number, the name of the part, and what part category it's from.
+The part_cat_id will reference the part_categoriy table 
+
+table: sets
+contains information on LEGO sets, including a unique 
+ID number, the name of the set, the year it was 
+released, its theme and how many parts it includes.
+The theme_id column references the themes table id column
+
+table: inventories
+contains information on inventories, including a unique ID, it's 
+version and the set number.
+The id column references the column set_num in the sets table.
+
+table: inventory_sets
+contains information on what inventory is included in 
+which sets, including the inventory ID, the set number and 
+the quantity of that inventory that are included.
+the inventory_id references the column id in the inventories table.
+
+table: inventory_parts
+contains information part inventories, including a unique 
+ID number, the part number, the color of the part, 
+how many are included and whether it's a spare.
+There are three foreign keys in this table. 
+The column part_num which references the column part_num in the table parts.
+The column color_id which references the column id in the table colors.
+The column inventory_id which references the column id in the table inventories.
+
+c.
+
+The main mapping challenges I faced delt with foreign keys. Some of the table were so large
+that trying to insert them using the website would result in a loading screen that didn't seem 
+to complete. So I had to chop out smaller portions of the data to be able to insert them.
+Because of all of the references between the tables there were problems when a child table 
+was trying to reference an FK that wasn't included. 
+The other issue was that my phython program that I create to genereate insert scripts doesn't yet
+have the functionality to handle illegal string characters. So there I had to do a multi step encode
+decode process in notepad to handle the dredded apostrope character.
+
+d
+
+1.
+-- Given a specific part show me a report of the following:
+-- The name of the part
+-- All possible colors
+-- The part number
+-- If the there are an translucent versions
+-- The exact RGB value
+
+-- List of part numbers that have multiple colors
+-- List is small due to the parts table having a reduced dataset
+
+-- 10247
+-- 10201
+-- 10113
+   
+SET @part_number = 10201;    
+    
+SELECT DISTINCT PT.part_num AS 'Part Number',
+	   PT.name AS 'Part Name',
+	   CL.name AS 'Color',
+       CL.is_trans AS 'Is it Translucent?',
+       CL.rgb AS 'RBG Value'
+FROM parts AS PT
+INNER JOIN inventory_parts AS IP
+	ON IP.part_num = PT.part_num
+INNER JOIN colors AS CL
+	ON CL.id = IP.color_id
+WHERE PT.part_num = @part_number;
+
+
+2. 
+
+-- Due to having to reduce the dataset sizes for the insert statements 
+-- the following scipt was used as setup for the actual script.
+-- Script to find all possible parts.name (reduced dataset) that exist for 
+-- each set.set_num (not reduced dataset)
+SELECT DISTINCT PT.name FROM inventories AS INV
+JOIN inventory_parts AS IP
+	ON INV.id = IP.inventory_id
+JOIN parts AS PT
+	ON IP.part_num = PT.part_num
+
+-- Above query was used for the follow script
+-- Partial list of parts.name that exist for sets: 
+
+-- 'Plate Special 2 x  2 with 1 Pin Hole [Complete Underside Rib]'
+-- 'Technic Pin Connector Hub with 2 Perpendicular Axles'
+-- 'Minifig Helmet Castle with Cheek Protection and Dark Red Ornaments Print'
+-- 'Plate Special 2 x  2 with 1 Pin Hole [Complete Underside Rib]'
+-- 'Bracket 1 x 2 - 1 x 4 [Rounded Corners]'
+-- 'Homemaker Bookcase 2 x 4 x 4'
+
+
+-- Show me a report with all of the following:
+-- The name of part 
+-- The part number
+-- The quantity of parts in set
+-- If the set includes any spares for that part
+-- The set number
+-- The name of the set
+-- The year the set came out
+-- The total number of parts in set
+
+-- Use the string literals from the above script to check other part names.
+SET @part_name = 'Technic Pin Connector Hub with 2 Perpendicular Axles';
+
+SELECT PT.name AS 'Name of Part', 
+	   PT.part_num AS 'Part Number', 
+	   quantity AS 'Quantity in Set', 
+       is_spare AS 'Are there Spares?', 
+       ST.set_num AS 'Set Number', 
+       ST.name AS 'Set Name', 
+       year AS 'Year', 
+       num_parts AS 'Total parts in Set'
+FROM parts AS PT
+INNER JOIN inventory_parts AS IP
+	ON PT.part_num = IP.part_num
+INNER JOIN inventories AS INV
+	ON IP.inventory_id = INV.id
+INNER JOIN sets AS ST
+	ON INV.set_num = ST.set_num
+WHERE PT.name = @part_name;
+
+
+
+3. 
+-- Show me a report with all of the following:
+-- The Set name,
+-- The Set number,
+-- The year it was created,
+-- The version number,
+-- The number of parts in the set,
+-- The name of the theme that the set is a part of
+
+SELECT version AS 'Version', 
+       ST.set_num AS 'Set Number', 
+       ST.name AS 'Set Name', 
+       year AS 'Year',
+       num_parts AS'Number of Parts in Set', 
+       TH.name as 'Theme Name'
+FROM inventories AS INV
+INNER JOIN sets AS ST
+    ON INV.set_num = ST.set_num
+INNER JOIN themes AS TH
+		ON ST.theme_id = TH.id;
+
+
+
+
+        

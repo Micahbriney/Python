@@ -1,0 +1,5 @@
+CREATE TABLE plant_customer_orders (
+	﻿Order INTEGER,
+	CustId-Name VARCHAR(30),
+	PRIMARY KEY()
+);

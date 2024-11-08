@@ -1,0 +1,6 @@
+	INSERT INTO plant_customer_orders (﻿Order,CustId-Name)
+VALUES
+	(9,'4-Cornie Fitchew'),
+	(542,'5-Ros Alenikov'),
+	(857,'6-Celia Rambadt'),
+	(23,'4-Cornie Fitchew');

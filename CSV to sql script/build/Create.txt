@@ -1,0 +1,8 @@
+CREATE TABlE albums (
+	AId INTEGER,
+	Title VARCHAR(30),
+	Year INTEGER,
+	Label VARCHAR(30),
+	Type VARCHAR(30),
+	PRIMARY KEY()
+);
